@@ -42,6 +42,7 @@ namespace TrackerUI
 
         }
 
+
         private void addTeamBtn_Click(object sender, EventArgs e)
         {
             if (selectTeamDropdown.SelectedItem != null)
