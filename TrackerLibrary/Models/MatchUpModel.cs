@@ -12,7 +12,11 @@ namespace TrackerLibrary.Models
         /// <summary>
         /// Represents the List of MatchUp Entries
         /// </summary>
-        public List<MatchUpEntryModel> Entries { get; set; }
+        public List<MatchUpEntryModel> Entries { get; set; }=new List<MatchUpEntryModel>();
+        /// <summary>
+        /// ID generated in DB to identify the winner in the matchup
+        /// </summary>
+        public int WinnerId { get; set; }
         /// <summary>
         /// Represents the winner in the matchup
         /// </summary>

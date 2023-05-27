@@ -54,6 +54,7 @@
             this.loadTournamentDropdown.Name = "loadTournamentDropdown";
             this.loadTournamentDropdown.Size = new System.Drawing.Size(473, 41);
             this.loadTournamentDropdown.TabIndex = 20;
+            this.loadTournamentDropdown.SelectedIndexChanged += new System.EventHandler(this.loadTournamentDropdown_SelectedIndexChanged);
             // 
             // loadTorunamentsLabel
             // 
@@ -76,6 +77,7 @@
             this.loadTournamentBtn.TabIndex = 21;
             this.loadTournamentBtn.Text = "Load Tournament";
             this.loadTournamentBtn.UseVisualStyleBackColor = true;
+            this.loadTournamentBtn.Click += new System.EventHandler(this.loadTournamentBtn_Click);
             // 
             // createTournamentBtn
             // 
@@ -89,6 +91,7 @@
             this.createTournamentBtn.TabIndex = 22;
             this.createTournamentBtn.Text = "Create Tournament";
             this.createTournamentBtn.UseVisualStyleBackColor = true;
+            this.createTournamentBtn.Click += new System.EventHandler(this.createTournamentBtn_Click);
             // 
             // TournamentDashboardForm
             // 

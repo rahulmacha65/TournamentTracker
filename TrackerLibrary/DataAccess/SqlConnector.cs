@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Reflection;
 using TrackerLibrary.Models;
 
 namespace TrackerLibrary
@@ -182,5 +184,273 @@ namespace TrackerLibrary
             }
             return teamList;
         }
+
+        public TournamentModel CreateTournament(TournamentModel model)
+        {
+            using (SqlConnection con = new SqlConnection(GlobalConfig.CnnString(db)))
+            {
+                try
+                {
+                    SaveTournament(con, model);
+                    SaveTournamentPrizes(con, model);
+                    SaveTournamentTeamEntries(con, model);
+                    SaveTournamentRounds(con, model);
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
+            return model;
+        }
+        private void SaveTournament(SqlConnection con,TournamentModel model)
+        {
+            SqlCommand cmd = new SqlCommand("dbo.spTournaments_Insert", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@TournamentName", model.TournamentName);
+            cmd.Parameters.AddWithValue("@EntryFee", model.EntryFee);
+            cmd.Parameters.Add("@Id", SqlDbType.Int).Direction = ParameterDirection.Output;
+            con.Open();
+            cmd.ExecuteNonQuery();
+            model.Id =  (int)cmd.Parameters["@Id"].Value;
+        }
+        private void SaveTournamentPrizes(SqlConnection con, TournamentModel model)
+        {
+            foreach (PrizeModel p in model.Prizes)
+            {
+                SqlCommand cmd1 = new SqlCommand("dbo.spTournamentPrizes_Insert", con);
+                cmd1.CommandType = CommandType.StoredProcedure;
+                cmd1.Parameters.AddWithValue("@TournamentId", model.Id);
+                cmd1.Parameters.AddWithValue("@PrizeId", p.ID);
+                cmd1.Parameters.Add("@Id", SqlDbType.Int).Direction = ParameterDirection.Output;
+
+                cmd1.ExecuteNonQuery();
+            }
+        }
+        private void SaveTournamentTeamEntries(SqlConnection con,TournamentModel model)
+        {
+            foreach (TeamModel tm in model.EnteredTeams)
+            {
+                SqlCommand cmd2 = new SqlCommand("dbo.spTournamentEntries_Insert", con);
+                cmd2.CommandType = CommandType.StoredProcedure;
+                cmd2.Parameters.AddWithValue("@TournamentId", model.Id);
+                cmd2.Parameters.AddWithValue("@TeamId", tm.Id);
+                cmd2.Parameters.Add("@Id", SqlDbType.Int).Direction = ParameterDirection.Output;
+
+                cmd2.ExecuteNonQuery();
+            }
+        }
+        private void SaveTournamentRounds(SqlConnection con, TournamentModel model)
+        {
+            //Loop through the rounds
+            //Loop through the Matchups
+            //Save the Matchup in DB
+            //Loop through the entries and save in DB
+            
+            foreach (List<MatchUpModel> round in model.Rounds)
+            {
+                foreach(MatchUpModel matchup in round)
+                {
+                    SqlCommand cmd = new SqlCommand("dbo.spMatchups_Insert", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@TournamentId", model.Id);
+                    cmd.Parameters.AddWithValue("@MatchupRound", matchup.MatchupRound);
+                    cmd.Parameters.Add("@Id", SqlDbType.Int).Direction = ParameterDirection.Output;
+
+                    cmd.ExecuteNonQuery();
+                    matchup.Id = (int)cmd.Parameters["@Id"].Value;
+                     
+                    foreach(MatchUpEntryModel entry in matchup.Entries)
+                    {
+                        SqlCommand cmd1 = new SqlCommand("dbo.spMatchupEntries_Insert", con);
+                        cmd1.CommandType = CommandType.StoredProcedure;
+                        cmd1.Parameters.AddWithValue("@MatchupId",matchup.Id);
+                        if (entry.ParentMatchUp != null)
+                        {
+                            cmd1.Parameters.AddWithValue("@ParentMatchupId", entry.ParentMatchUp.Id);
+                        }
+                        else
+                        {
+                            cmd1.Parameters.AddWithValue("@ParentMatchupId", 0);//@ParentMatchupId
+                        }
+                        if (entry.TeamCompeting!=null)
+                        {
+                            cmd1.Parameters.AddWithValue("@TeamCompetingId", entry.TeamCompeting.Id);
+                        }
+                        else
+                        {
+                            cmd1.Parameters.AddWithValue("@TeamCompetingId", 0);
+                        }
+                        cmd1.Parameters.Add("@Id", SqlDbType.Int).Direction = ParameterDirection.Output;
+
+                        cmd1.ExecuteNonQuery();
+                        entry.Id = (int)cmd1.Parameters["@Id"].Value;
+                    }
+                }
+            }
+        }
+
+        public List<TournamentModel> GetTournament_All()
+        {
+            List<TournamentModel> tournament = new List<TournamentModel>();
+            
+            using (SqlConnection con = new SqlConnection(GlobalConfig.CnnString(db)))
+            {
+                SqlCommand cmd = new SqlCommand("spTournament_All", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                DataTable table = new DataTable();
+
+                try
+                {
+                    con.Open();
+                    SqlDataAdapter ad = new SqlDataAdapter(cmd);
+                    ad.Fill(table);
+                     
+                    foreach (DataRow dr in table.Rows)
+                    {
+                        TournamentModel model = new TournamentModel();
+                        model.Id = Int32.Parse(dr["Id"].ToString());
+                        model.TournamentName = dr["TournamentName"].ToString();
+                        model.EntryFee = Decimal.Parse(dr["EntryFee"].ToString());
+                        tournament.Add(model);
+                    }
+                    //populate prizes
+                    foreach (TournamentModel t in tournament)
+                    {
+                        SqlCommand cmd1 = new SqlCommand("spPrizes_GetByTournament", con);
+                        cmd1.CommandType = CommandType.StoredProcedure;
+                        cmd1.Parameters.AddWithValue("@TournamentId", t.Id);
+                        DataTable dt2 = new DataTable();
+                        SqlDataAdapter da = new SqlDataAdapter();
+                        da.Fill(dt2);
+                        foreach(DataRow dr in dt2.Rows)
+                        {
+                            PrizeModel p = new PrizeModel();
+                            p.ID = Int32.Parse(dr["Id"].ToString());
+                            p.PlaceNumber = Int32.Parse(dr["PlaceNumber"].ToString());
+                            p.PlaceName = dr["PlaceName"].ToString();
+                            p.PriceAmount = Decimal.Parse(dr["PrizeAmount"].ToString());
+                            p.PricePercentage = Double.Parse(dr["PricePercentage"].ToString());
+                            t.Prizes.Add(p);
+
+                        }
+                        //populate Teams
+                        SqlCommand cmd2 = new SqlCommand("spTeam_GetByTournament",con);
+                        cmd2.CommandType = CommandType.StoredProcedure;
+                        cmd2.Parameters.AddWithValue("@TournamentId", t.Id);
+                        DataTable dt3 = new DataTable();
+                        SqlDataAdapter da1 = new SqlDataAdapter();
+                        da1.Fill(dt3);
+                        foreach(DataRow dr in dt3.Rows)
+                        {
+                            TeamModel tm = new TeamModel();
+                            tm.Id = Int32.Parse(dr["Id"].ToString());
+                            tm.TeamName = dr["TeamName"].ToString();
+                            t.EnteredTeams.Add(tm);
+                            SqlCommand cmd3 = new SqlCommand("dbo.spTeamMembers_GetByTeam", con);
+                            cmd1.CommandType = CommandType.StoredProcedure;
+                            cmd1.Parameters.AddWithValue("@TeamId", tm.Id);
+
+                            SqlDataAdapter da3 = new SqlDataAdapter(cmd1);
+                            da.Fill(dt3);
+                            foreach (DataRow dr1 in dt3.Rows)
+                            {
+                                List<PersonModel> pModelList = new List<PersonModel>();
+                                pModelList.Add(new PersonModel()
+                                {
+                                    Id = Int32.Parse(dr1["Id"].ToString()),
+                                    FirstName = dr1["FirstName"].ToString(),
+                                    LastName = dr1["LastName"].ToString(),
+                                    Email = dr1["EmailAddress"].ToString(),
+                                    CellPhoneNumber = dr1["CellPhoneNumber"].ToString()
+                                });
+                                tm.TeamMembers = pModelList;
+                            }
+                        }
+
+                        //Populate Rounds
+
+                        SqlCommand cmd4 = new SqlCommand("spMatchup_GetByTournament", con);
+                        cmd4.CommandType = CommandType.StoredProcedure;
+                        cmd4.Parameters.AddWithValue("@TournamentId", t.Id);
+                        DataTable dt4 = new DataTable();
+                        SqlDataAdapter da2 = new SqlDataAdapter(cmd4);
+                        da2.Fill(dt4);
+                        foreach(DataRow dr in dt4.Rows)
+                        {
+                            List<MatchUpModel> matchups = new List<MatchUpModel>()
+                            {
+                                new MatchUpModel(){
+                                    Id= Int32.Parse(dr["Id"].ToString()),
+                                    WinnerId=Int32.Parse(dr["WinnerId"].ToString()),
+                                    MatchupRound = Int32.Parse(dr["MatchupRound"].ToString())
+                                }
+                            };
+                            foreach(MatchUpModel m in matchups)
+                            {
+                                SqlCommand cmd5 = new SqlCommand("spMatchupEntries_GetByMatchup", con);
+                                cmd5.CommandType = CommandType.StoredProcedure;
+                                cmd5.Parameters.AddWithValue("@MatchupId",m.Id);
+                                DataTable dt6 = new DataTable();
+                                SqlDataAdapter da3 = new SqlDataAdapter();
+                                da3.Fill(dt6);
+                                foreach(DataRow dr1 in dt6.Rows)
+                                {
+                                    MatchUpEntryModel me = new MatchUpEntryModel();
+                                    me.Id = Int32.Parse(dr1["Id"].ToString());
+                                    me.Score = Double.Parse(dr1["Score"].ToString());
+                                    me.ParentMatchUpId = Int32.Parse(dr1["ParentMatchupId"].ToString());
+                                    me.TeamCompetingId = Int32.Parse(dr1["TeamCompetingId"].ToString());
+                                    m.Entries.Add(me);
+                                    List<TeamModel> allTeams = GetTeam_All();
+                                    //POPULATE EACH MATCHUP (1 MODEL)
+                                    if (m.WinnerId > 0)
+                                    {
+                                        m.Winner = allTeams.Where(x => x.Id == m.WinnerId).First();
+                                    }
+                                    //POPULATE EACH ENTRY (2 MODEL)
+                                    foreach (MatchUpEntryModel m2 in m.Entries)
+                                    {
+                                        if (m2.TeamCompetingId > 0)
+                                        {
+                                            m2.TeamCompeting = allTeams.Where(x => x.Id == m2.TeamCompetingId).First();
+                                        }
+                                        if (m2.ParentMatchUpId > 0)
+                                        {
+                                            m2.ParentMatchUp = matchups.Where(x => x.Id == m2.ParentMatchUpId).First();
+                                        }
+                                    }
+                                }
+                            }
+                            //List<List<MatchupModel>>
+                            List<MatchUpModel> currRow = new List<MatchUpModel>();
+                            int currRound = 1;
+                            foreach (MatchUpModel m in matchups)
+                            {
+                                if(m.MatchupRound > currRound)
+                                {
+                                    t.Rounds.Add(currRow);
+                                    currRow = new List<MatchUpModel>();
+                                    currRound++;
+                                }
+                                currRow.Add(m);
+                            }
+                            t.Rounds.Add(currRow);
+                        }
+                        
+                    }
+
+
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+            return tournament;
+        }
+        
+
     }
 }

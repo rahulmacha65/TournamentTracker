@@ -7,16 +7,30 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TrackerLibrary.Models;
 
 namespace TrackerUI
 {
     public partial class TournamentViewerForm : Form
     {
-        public TournamentViewerForm()
+        private TournamentModel tournament;
+        List<string> rounds = new List<string>();
+        public TournamentViewerForm(TournamentModel tournamentModel)
         {
             InitializeComponent();
+            this.tournament = tournamentModel;
+            SetupViewPage();
         }
 
+        private void SetupViewPage()
+        {
+            tournamentName.Text = tournament.TournamentName;
+        }
+
+        private void LoadRound()
+        {
+
+        }
         private void TournamentViewerForm_Load(object sender, EventArgs e)
         {
 
