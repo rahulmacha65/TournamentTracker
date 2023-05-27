@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using TrackerLibrary;
 using TrackerLibrary.Models;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 
 namespace TrackerUI
 {
@@ -120,6 +121,7 @@ namespace TrackerUI
 
         private void ScoreBtn_Click(object sender, EventArgs e)
         {
+            int startingRound = CheckCurrentRound(tournament);
             MatchUpModel m = (MatchUpModel)MatchupListBox.SelectedItem;
             double teamOneScore = 0;
             double teamTwoScore = 0;
@@ -175,6 +177,69 @@ namespace TrackerUI
                 MessageBox.Show("I Don't Handle Ties");
             }
             GlobalConfig.Connection.UpdateMatchUpModel(m);
+            int endingRound = CheckCurrentRound(tournament);
+            if(endingRound > startingRound)
+            {
+                AlertUsersToNewRound(tournament);
+            }
+        }
+
+        private  void AlertUsersToNewRound(TournamentModel model)
+        {
+            int currentRoundNumber = CheckCurrentRound(model);
+            List<MatchUpModel> currentRound = model.Rounds.Where(x => x.First().MatchupRound == currentRoundNumber).First();
+
+            foreach(MatchUpModel matchups in currentRound)
+            {
+                foreach(MatchUpEntryModel me in matchups.Entries)
+                {
+                    foreach(PersonModel p in me.TeamCompeting.TeamMembers)
+                    {
+                        AlertPersonToNewRound(p, me.TeamCompeting.TeamName,matchups.Entries.Where(x=>x.TeamCompeting!=me.TeamCompeting).FirstOrDefault());
+                    }
+                }
+            }
+        }
+        private void AlertPersonToNewRound(PersonModel p,string teamName, MatchUpEntryModel competitor)
+        {
+            string fromAddress = GlobalConfig.SenderEmail("senderEmail");
+            string to = "";
+            string subject = "";
+            
+            StringBuilder body = new StringBuilder();
+            if (competitor !=null)
+            {
+                subject = $"You have a new matchup with {competitor.TeamCompeting.TeamName}";
+                body.AppendLine("<h1>You have a new matchup</h1>");
+                body.Append("<strong>Competitor: </strong>");
+                body.AppendLine(competitor.TeamCompeting.TeamName);
+                body.AppendLine();
+                body.AppendLine();
+                body.AppendLine("Have a great time!!");
+                body.AppendLine("~Tournament Organizers");
+            }
+            else
+            {
+                subject = $"You have bye week in this round";
+                body.AppendLine("Enjoy your round off!");
+                body.AppendLine("~Tournament Organizers");
+            }
+            to = p.Email; 
+
+
+            EmailService.SendEmail(fromAddress, to, subject, body.ToString());
+        }
+        private int CheckCurrentRound(TournamentModel model)
+        {
+            int output = 1;
+            foreach (List<MatchUpModel> m in model.Rounds)
+            {
+                if (m.All(x => x.Winner != null))
+                {
+                    output++;
+                }
+            }
+            return output;
         }
     }
 }

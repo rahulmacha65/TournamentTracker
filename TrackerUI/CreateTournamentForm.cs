@@ -130,8 +130,9 @@ namespace TrackerUI
 
             //Create tournament, all the prizes entries and team entries
             GlobalConfig.Connection.CreateTournament(tm);
-            
-
+            TournamentViewerForm viewerForm = new TournamentViewerForm(tm);
+            viewerForm.Show();
+            this.Close();
         }
     }
 }

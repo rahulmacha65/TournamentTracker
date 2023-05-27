@@ -36,5 +36,10 @@ namespace TrackerLibrary
             return ConfigurationManager.ConnectionStrings[cnnName].ConnectionString;
             
         }
+
+        public static string SenderEmail(string key)
+        {
+            return ConfigurationManager.AppSettings[key];
+        }
     }
 }
