@@ -461,18 +461,23 @@ namespace TrackerLibrary
                 SqlCommand cmd = new SqlCommand("spMatchups_Update", con);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@Id", model.Id);
-                cmd.Parameters.AddWithValue("@WinnerId", model.WinnerId);
-
-                int updatedCount = cmd.ExecuteNonQuery();
+                if (model.Winner != null)
+                {
+                    cmd.Parameters.AddWithValue("@WinnerId", model.Winner.Id);
+                    cmd.ExecuteNonQuery();
+                }
 
                 foreach(MatchUpEntryModel entry in model.Entries)
                 {
                     SqlCommand cmd1 = new SqlCommand("spMatchEntries_Update", con);
                     cmd1.CommandType = CommandType.StoredProcedure;
                     cmd1.Parameters.AddWithValue("@Id", entry.Id);
-                    cmd1.Parameters.AddWithValue("@TeamCompetingId", entry.TeamCompeting.Id);
-                    cmd1.Parameters.AddWithValue("@Score", entry.Score);
-                    cmd1.ExecuteNonQuery();
+                    if (entry.TeamCompeting != null)
+                    {
+                        cmd1.Parameters.AddWithValue("@TeamCompetingId", entry.TeamCompeting.Id);
+                        cmd1.Parameters.AddWithValue("@Score", entry.Score);
+                        cmd1.ExecuteNonQuery();
+                    }
                 }
             }
         }
