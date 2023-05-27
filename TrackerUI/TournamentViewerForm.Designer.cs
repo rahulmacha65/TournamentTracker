@@ -32,14 +32,13 @@
             this.tournamentName = new System.Windows.Forms.Label();
             this.roundLabel = new System.Windows.Forms.Label();
             this.roundDropdown = new System.Windows.Forms.ComboBox();
-            this.unplayedOnlyCheckBox = new System.Windows.Forms.CheckBox();
             this.MatchupListBox = new System.Windows.Forms.ListBox();
             this.teamOneName = new System.Windows.Forms.Label();
             this.teamOneScoreLabel = new System.Windows.Forms.Label();
             this.teamOneScoreValue = new System.Windows.Forms.TextBox();
             this.teamTwoScoreValue = new System.Windows.Forms.TextBox();
             this.teamTwoScoreLabel = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
+            this.teamTwoName = new System.Windows.Forms.Label();
             this.versusLabel = new System.Windows.Forms.Label();
             this.ScoreBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -49,7 +48,8 @@
             this.headerLabel.AutoSize = true;
             this.headerLabel.Font = new System.Drawing.Font("Calibri", 28F);
             this.headerLabel.ForeColor = System.Drawing.Color.Black;
-            this.headerLabel.Location = new System.Drawing.Point(34, 25);
+            this.headerLabel.Location = new System.Drawing.Point(29, 25);
+            this.headerLabel.Margin = new System.Windows.Forms.Padding(0);
             this.headerLabel.Name = "headerLabel";
             this.headerLabel.Size = new System.Drawing.Size(273, 58);
             this.headerLabel.TabIndex = 0;
@@ -60,7 +60,8 @@
             this.tournamentName.AutoSize = true;
             this.tournamentName.Font = new System.Drawing.Font("Calibri", 28F);
             this.tournamentName.ForeColor = System.Drawing.Color.Black;
-            this.tournamentName.Location = new System.Drawing.Point(290, 25);
+            this.tournamentName.Location = new System.Drawing.Point(250, 25);
+            this.tournamentName.Margin = new System.Windows.Forms.Padding(0);
             this.tournamentName.Name = "tournamentName";
             this.tournamentName.Size = new System.Drawing.Size(123, 58);
             this.tournamentName.TabIndex = 1;
@@ -82,17 +83,7 @@
             this.roundDropdown.Name = "roundDropdown";
             this.roundDropdown.Size = new System.Drawing.Size(274, 41);
             this.roundDropdown.TabIndex = 3;
-            // 
-            // unplayedOnlyCheckBox
-            // 
-            this.unplayedOnlyCheckBox.AutoSize = true;
-            this.unplayedOnlyCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.unplayedOnlyCheckBox.Location = new System.Drawing.Point(139, 160);
-            this.unplayedOnlyCheckBox.Name = "unplayedOnlyCheckBox";
-            this.unplayedOnlyCheckBox.Size = new System.Drawing.Size(195, 39);
-            this.unplayedOnlyCheckBox.TabIndex = 4;
-            this.unplayedOnlyCheckBox.Text = "UnplayedOnly";
-            this.unplayedOnlyCheckBox.UseVisualStyleBackColor = true;
+            this.roundDropdown.SelectedIndexChanged += new System.EventHandler(this.roundDropdown_SelectedIndexChanged);
             // 
             // MatchupListBox
             // 
@@ -102,6 +93,7 @@
             this.MatchupListBox.Name = "MatchupListBox";
             this.MatchupListBox.Size = new System.Drawing.Size(363, 235);
             this.MatchupListBox.TabIndex = 5;
+            this.MatchupListBox.SelectedIndexChanged += new System.EventHandler(this.MatchupListBox_SelectedIndexChanged);
             // 
             // teamOneName
             // 
@@ -144,14 +136,14 @@
             this.teamTwoScoreLabel.TabIndex = 10;
             this.teamTwoScoreLabel.Text = "Score";
             // 
-            // label2
+            // teamTwoName
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(614, 361);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(151, 35);
-            this.label2.TabIndex = 9;
-            this.label2.Text = "<team two>";
+            this.teamTwoName.AutoSize = true;
+            this.teamTwoName.Location = new System.Drawing.Point(614, 361);
+            this.teamTwoName.Name = "teamTwoName";
+            this.teamTwoName.Size = new System.Drawing.Size(151, 35);
+            this.teamTwoName.TabIndex = 9;
+            this.teamTwoName.Text = "<team two>";
             // 
             // versusLabel
             // 
@@ -174,6 +166,7 @@
             this.ScoreBtn.TabIndex = 13;
             this.ScoreBtn.Text = "Score";
             this.ScoreBtn.UseVisualStyleBackColor = true;
+            this.ScoreBtn.Click += new System.EventHandler(this.ScoreBtn_Click);
             // 
             // TournamentViewerForm
             // 
@@ -185,12 +178,11 @@
             this.Controls.Add(this.versusLabel);
             this.Controls.Add(this.teamTwoScoreValue);
             this.Controls.Add(this.teamTwoScoreLabel);
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.teamTwoName);
             this.Controls.Add(this.teamOneScoreValue);
             this.Controls.Add(this.teamOneScoreLabel);
             this.Controls.Add(this.teamOneName);
             this.Controls.Add(this.MatchupListBox);
-            this.Controls.Add(this.unplayedOnlyCheckBox);
             this.Controls.Add(this.roundDropdown);
             this.Controls.Add(this.roundLabel);
             this.Controls.Add(this.tournamentName);
@@ -211,14 +203,13 @@
         private System.Windows.Forms.Label tournamentName;
         private System.Windows.Forms.Label roundLabel;
         private System.Windows.Forms.ComboBox roundDropdown;
-        private System.Windows.Forms.CheckBox unplayedOnlyCheckBox;
         private System.Windows.Forms.ListBox MatchupListBox;
         private System.Windows.Forms.Label teamOneName;
         private System.Windows.Forms.Label teamOneScoreLabel;
         private System.Windows.Forms.TextBox teamOneScoreValue;
         private System.Windows.Forms.TextBox teamTwoScoreValue;
         private System.Windows.Forms.Label teamTwoScoreLabel;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label teamTwoName;
         private System.Windows.Forms.Label versusLabel;
         private System.Windows.Forms.Button ScoreBtn;
     }

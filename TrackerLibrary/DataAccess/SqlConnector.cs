@@ -321,7 +321,7 @@ namespace TrackerLibrary
                         cmd1.CommandType = CommandType.StoredProcedure;
                         cmd1.Parameters.AddWithValue("@TournamentId", t.Id);
                         DataTable dt2 = new DataTable();
-                        SqlDataAdapter da = new SqlDataAdapter();
+                        SqlDataAdapter da = new SqlDataAdapter(cmd1);
                         da.Fill(dt2);
                         foreach(DataRow dr in dt2.Rows)
                         {
@@ -330,7 +330,7 @@ namespace TrackerLibrary
                             p.PlaceNumber = Int32.Parse(dr["PlaceNumber"].ToString());
                             p.PlaceName = dr["PlaceName"].ToString();
                             p.PriceAmount = Decimal.Parse(dr["PrizeAmount"].ToString());
-                            p.PricePercentage = Double.Parse(dr["PricePercentage"].ToString());
+                            p.PricePercentage = Double.Parse(dr["PrizePercentage"].ToString());
                             t.Prizes.Add(p);
 
                         }
@@ -339,7 +339,7 @@ namespace TrackerLibrary
                         cmd2.CommandType = CommandType.StoredProcedure;
                         cmd2.Parameters.AddWithValue("@TournamentId", t.Id);
                         DataTable dt3 = new DataTable();
-                        SqlDataAdapter da1 = new SqlDataAdapter();
+                        SqlDataAdapter da1 = new SqlDataAdapter(cmd2);
                         da1.Fill(dt3);
                         foreach(DataRow dr in dt3.Rows)
                         {
@@ -348,23 +348,20 @@ namespace TrackerLibrary
                             tm.TeamName = dr["TeamName"].ToString();
                             t.EnteredTeams.Add(tm);
                             SqlCommand cmd3 = new SqlCommand("dbo.spTeamMembers_GetByTeam", con);
-                            cmd1.CommandType = CommandType.StoredProcedure;
-                            cmd1.Parameters.AddWithValue("@TeamId", tm.Id);
-
-                            SqlDataAdapter da3 = new SqlDataAdapter(cmd1);
-                            da.Fill(dt3);
-                            foreach (DataRow dr1 in dt3.Rows)
+                            cmd3.CommandType = CommandType.StoredProcedure;
+                            cmd3.Parameters.AddWithValue("@TeamId", tm.Id);
+                            DataTable dt5 = new DataTable();
+                            SqlDataAdapter da3 = new SqlDataAdapter(cmd3);
+                            da3.Fill(dt5);
+                            foreach (DataRow dr1 in dt5.Rows)
                             {
-                                List<PersonModel> pModelList = new List<PersonModel>();
-                                pModelList.Add(new PersonModel()
-                                {
-                                    Id = Int32.Parse(dr1["Id"].ToString()),
-                                    FirstName = dr1["FirstName"].ToString(),
-                                    LastName = dr1["LastName"].ToString(),
-                                    Email = dr1["EmailAddress"].ToString(),
-                                    CellPhoneNumber = dr1["CellPhoneNumber"].ToString()
-                                });
-                                tm.TeamMembers = pModelList;
+                                PersonModel pModelList = new PersonModel();
+                                pModelList.Id = Int32.Parse(dr1["Id"].ToString());
+                                pModelList.FirstName = dr1["FirstName"].ToString();
+                                pModelList.LastName = dr1["LastName"].ToString();
+                                pModelList.Email = dr1["EmailAddress"].ToString();
+                                pModelList.CellPhoneNumber = dr1["CellPhoneNumber"].ToString();
+                                tm.TeamMembers.Add(pModelList);
                             }
                         }
 
@@ -376,29 +373,34 @@ namespace TrackerLibrary
                         DataTable dt4 = new DataTable();
                         SqlDataAdapter da2 = new SqlDataAdapter(cmd4);
                         da2.Fill(dt4);
-                        foreach(DataRow dr in dt4.Rows)
+                        List<MatchUpModel> matchups = new List<MatchUpModel>();
+                        foreach (DataRow dr in dt4.Rows)
                         {
-                            List<MatchUpModel> matchups = new List<MatchUpModel>()
-                            {
-                                new MatchUpModel(){
-                                    Id= Int32.Parse(dr["Id"].ToString()),
-                                    WinnerId=Int32.Parse(dr["WinnerId"].ToString()),
-                                    MatchupRound = Int32.Parse(dr["MatchupRound"].ToString())
-                                }
-                            };
-                            foreach(MatchUpModel m in matchups)
+                            int winId = 0;
+                            MatchUpModel mp = new MatchUpModel();
+                            mp.Id = Int32.Parse(dr["Id"].ToString());//dr["WinnerId"]
+                            if(Int32.TryParse(dr["WinnerId"].ToString(),out winId)){
+                                mp.WinnerId = winId;
+                            }
+                            mp.MatchupRound = Int32.Parse(dr["MatchupRound"].ToString());
+                            matchups.Add(mp);
+                            foreach (MatchUpModel m in matchups)
                             {
                                 SqlCommand cmd5 = new SqlCommand("spMatchupEntries_GetByMatchup", con);
                                 cmd5.CommandType = CommandType.StoredProcedure;
                                 cmd5.Parameters.AddWithValue("@MatchupId",m.Id);
                                 DataTable dt6 = new DataTable();
-                                SqlDataAdapter da3 = new SqlDataAdapter();
+                                SqlDataAdapter da3 = new SqlDataAdapter(cmd5);
                                 da3.Fill(dt6);
                                 foreach(DataRow dr1 in dt6.Rows)
                                 {
+                                    double points = 0.0;
                                     MatchUpEntryModel me = new MatchUpEntryModel();
                                     me.Id = Int32.Parse(dr1["Id"].ToString());
-                                    me.Score = Double.Parse(dr1["Score"].ToString());
+                                    if(Double.TryParse(dr1["Score"].ToString(),out points))
+                                    {
+                                        me.Score = points;
+                                    };
                                     me.ParentMatchUpId = Int32.Parse(dr1["ParentMatchupId"].ToString());
                                     me.TeamCompetingId = Int32.Parse(dr1["TeamCompetingId"].ToString());
                                     m.Entries.Add(me);
@@ -422,22 +424,22 @@ namespace TrackerLibrary
                                     }
                                 }
                             }
-                            //List<List<MatchupModel>>
-                            List<MatchUpModel> currRow = new List<MatchUpModel>();
-                            int currRound = 1;
-                            foreach (MatchUpModel m in matchups)
-                            {
-                                if(m.MatchupRound > currRound)
-                                {
-                                    t.Rounds.Add(currRow);
-                                    currRow = new List<MatchUpModel>();
-                                    currRound++;
-                                }
-                                currRow.Add(m);
-                            }
-                            t.Rounds.Add(currRow);
                         }
-                        
+                        //List<List<MatchupModel>>
+                        List<MatchUpModel> currRow = new List<MatchUpModel>();
+                        int currRound = 1;
+                        foreach (MatchUpModel m in matchups)
+                        {
+                            if (m.MatchupRound > currRound)
+                            {
+                                t.Rounds.Add(currRow);
+                                currRow = new List<MatchUpModel>();
+                                currRound++;
+                            }
+                            currRow.Add(m);
+                        }
+                        t.Rounds.Add(currRow);
+
                     }
 
 
@@ -450,7 +452,29 @@ namespace TrackerLibrary
             }
             return tournament;
         }
-        
 
+        public void UpdateMatchUpModel(MatchUpModel model)
+        {
+            using (SqlConnection con = new SqlConnection(GlobalConfig.CnnString(db)))
+            {
+                con.Open();
+                SqlCommand cmd = new SqlCommand("spMatchups_Update", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Id", model.Id);
+                cmd.Parameters.AddWithValue("@WinnerId", model.WinnerId);
+
+                int updatedCount = cmd.ExecuteNonQuery();
+
+                foreach(MatchUpEntryModel entry in model.Entries)
+                {
+                    SqlCommand cmd1 = new SqlCommand("spMatchEntries_Update", con);
+                    cmd1.CommandType = CommandType.StoredProcedure;
+                    cmd1.Parameters.AddWithValue("@Id", entry.Id);
+                    cmd1.Parameters.AddWithValue("@TeamCompetingId", entry.TeamCompeting.Id);
+                    cmd1.Parameters.AddWithValue("@Score", entry.Score);
+                    cmd1.ExecuteNonQuery();
+                }
+            }
+        }
     }
 }
