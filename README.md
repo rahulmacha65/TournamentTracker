@@ -40,6 +40,7 @@ The Tournament Tracker is a Windows Forms Application which is used to Organize 
       - You have option to select another Round where you can see next teams who is playing with whom in a List Box.
       
 - Email Service:
+
       - Tournament Tracker have Emailing feature.
       - It will send email to each team members who won in each round.
       - In final round it will sends the email to "Tournament Winner Team" along with all other teams who participated in the Tournament.
