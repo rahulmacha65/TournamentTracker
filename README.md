@@ -8,12 +8,12 @@ The Tournament Tracker is a Windows Forms Application which is used to Organize 
       - where you can see all the Tournaments and you can also create new Tournament.
 - Create Tournament Form features: 
 
-      - Set up Tournament Name.
-      - Set up Entry Fee for each team in the Tournament.
+      - You can setup Tournament Name.
+      - You can setup Entry Fee for each team in the Tournament.
       - You can select existing teams or you can create new team.
       - You can add existing team members in your team or you can create new team member for your team.
       - You can create Prize for Winner and RunnerUp Teams.
-      - You can list down all the teams and prize amount for winner of the Tournament in a List Box after creating teams and prizes.
+      - It will list down all the teams and prize amount of the Tournament in a List Box.
       - In Case you want to delete a teams or prize you can delete it from List Box.
       
 - Create New Team:
