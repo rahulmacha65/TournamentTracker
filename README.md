@@ -14,14 +14,14 @@ The Tournament Tracker is a Windows Forms Application which is used to Organize 
       - You can add existing team members in your team or you can create new team member for your team.
       - You can create Prize for Winner and RunnerUp Teams.
       - You can list down all the teams and prize amount for winner of the Tournament in a List Box after creating teams and prizes.
-      - In Case you want to delete a teams or prize you can delete it from List Box by clicking on "Delete Team" and "Delete Prize" buttons in the form.
+      - In Case you want to delete a teams or prize you can delete it from List Box.
       
 - Create New Team:
 
       - You can give Team Name to your team.
       - You have option to select the existing team members which are already available.
       - You can also create a brand new team member.
-      - After adding all the team member you have a option to delete team member from the List Box by using "Remove Member" button in the form.
+      - After adding all the team member you have a option to delete team member from the List Box.
       
 - Create Prize:
 
