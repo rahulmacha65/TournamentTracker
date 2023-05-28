@@ -103,5 +103,10 @@ namespace TrackerLibrary
         {
             throw new NotImplementedException();
         }
+
+        public void CompleteTournament(TournamentModel model)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -24,9 +24,16 @@ namespace TrackerUI
         public TournamentViewerForm(TournamentModel tournamentModel)
         {
             InitializeComponent();
+            
             this.tournament = tournamentModel;
+            tournament.OnTournamentComplete += Tournament_OnTournamentComplete;
             SetupViewPage();
             LoadRounds();
+        }
+
+        private void Tournament_OnTournamentComplete(object sender, DateTime e)
+        {
+            this.Close();
         }
 
         private void SetupViewPage()
@@ -213,8 +220,8 @@ namespace TrackerUI
                 body.AppendLine("<h1>You have a new matchup</h1>");
                 body.Append("<strong>Competitor: </strong>");
                 body.AppendLine(competitor.TeamCompeting.TeamName);
-                body.AppendLine();
-                body.AppendLine();
+                body.AppendLine(Environment.NewLine);
+                body.AppendLine(Environment.NewLine);
                 body.AppendLine("Have a great time!!");
                 body.AppendLine("~Tournament Organizers");
             }
@@ -238,6 +245,84 @@ namespace TrackerUI
                 {
                     output++;
                 }
+                else
+                {
+                    return output;
+                }
+            }
+            TournamentCompleted(model);
+            return output - 1;
+        }
+        private void TournamentCompleted(TournamentModel model)
+        {
+            GlobalConfig.Connection.CompleteTournament(model);
+            TeamModel winner = model.Rounds.Last().First().Winner;
+            TeamModel runnerUp = model.Rounds.Last().First().Entries.Where(x => x.TeamCompeting != winner).First().TeamCompeting;
+            decimal winnerPrize = 0;
+            decimal runnerUpPrize = 0;
+            if (model.Prizes.Count > 0)
+            {
+                decimal totalIncome = model.EnteredTeams.Count * model.EntryFee;
+
+                PrizeModel firstPlacePrize = model.Prizes.Where(x => x.PlaceNumber == 1).FirstOrDefault();
+                PrizeModel secondPlacePrize = model.Prizes.Where(x => x.PlaceNumber == 2).FirstOrDefault();
+                if (firstPlacePrize != null)
+                {
+                    winnerPrize = CalculatePrizePayout(model.Prizes[0], totalIncome);
+                }
+                if(secondPlacePrize != null)
+                {
+                    runnerUpPrize = CalculatePrizePayout(model.Prizes[1], totalIncome);
+                }
+            }
+
+            //send Winner Email to All Teams
+            string fromAddress = GlobalConfig.SenderEmail("senderEmail");
+            List<string> to = new List<string>();
+            List<string> bcc = new List<string>();
+            string subject = "";
+
+            StringBuilder body = new StringBuilder();
+            subject = $"In {model.TournamentName}, {winner.TeamName} has Won!";
+            body.AppendLine("<h1>We have a WINNER!</h1>");
+            body.Append("<p> Congratulations to our Winner in a great Tournament.</p>");
+            if (winnerPrize > 0)
+            {
+                body.AppendLine($"<p>{winner.TeamName} will receive {winnerPrize}</p>");
+            }
+            if (runnerUpPrize > 0)
+            {
+                body.AppendLine($"<p>{runnerUp.TeamName} will receive {runnerUpPrize}</p>");
+            }
+            body.AppendLine("<p> Thank You for a great Tournament!! </p>");
+            body.AppendLine("~Tournament Organizers");
+
+
+            foreach(TeamModel t in model.EnteredTeams)
+            {
+                foreach(PersonModel p in t.TeamMembers)
+                {
+                    if (p.Email.Length > 0)
+                    {
+                        bcc.Add(p.Email);
+                    }
+                }
+            }
+
+            EmailService.SendEmail(fromAddress, to, subject, body.ToString(),bcc);
+
+            model.TournamentComplete();
+        }
+        private decimal CalculatePrizePayout(PrizeModel prize,decimal totalIncome)
+        {
+            decimal output = 0;
+            if (prize.PriceAmount > 0)
+            {
+                output = prize.PriceAmount;
+            }
+            else
+            {
+                output = Decimal.Multiply(totalIncome, Convert.ToDecimal(prize.PricePercentage / 100));
             }
             return output;
         }

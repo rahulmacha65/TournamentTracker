@@ -481,5 +481,17 @@ namespace TrackerLibrary
                 }
             }
         }
+
+        public void CompleteTournament(TournamentModel model)
+        {
+            using (SqlConnection con = new SqlConnection(GlobalConfig.CnnString(db)))
+            {
+                con.Open();
+                SqlCommand cmd = new SqlCommand("dbo.spTournament_Complete", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@TournamentId", model.Id);
+                cmd.ExecuteNonQuery();
+            }
+        }
     }
 }
